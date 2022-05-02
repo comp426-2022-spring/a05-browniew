@@ -73,46 +73,135 @@ app.use((req, res, next) => {
     next();
 })
 
-// Flip one coin
-function coinFlip() {
-    return (Math.floor(Math.random() * 2) == 0) ? 'heads' : 'tails';
-}
-// Flip many coins
-function coinFlips(flips) {
-    let array = [];
-    for (let i = 1; i <= flips; i++) {
-        array.push(coinFlip());
+/** Coin flip functions 
+ * This module will emulate a coin flip given various conditions as parameters as defined below
+ */
+
+/** Simple coin flip
+ * 
+ * Write a function that accepts no parameters but returns either heads or tails at random.
+ * 
+ * @param {*}
+ * @returns {string} 
+ * 
+ * example: coinFlip()
+ * returns: heads
+ * 
+ */
+
+ function coinFlip() {
+
+    var x = Math.floor(Math.random()*2);
+  
+    if(x == 0) {
+      return 'heads';
     }
-    return array;
-}
-// Count coin flips
-function countFlips(array) {
-    let counter = {};
-    array.forEach(item => {
-        if (counter[item]) {
-            counter[item]++;
-        } else {
-            counter[item] = 1;
-        }
+    else {
+      return 'tails';
+    }
+  }
+  
+  /** Multiple coin flips
+   * 
+   * Write a function that accepts one parameter (number of flips) and returns an array of 
+   * resulting "heads" or "tails".
+   * 
+   * @param {number} flips 
+   * @returns {string[]} results
+   * 
+   * example: coinFlips(10)
+   * returns:
+   *  [
+        'heads', 'heads',
+        'heads', 'tails',
+        'heads', 'tails',
+        'tails', 'heads',
+        'tails', 'heads'
+      ]
+   */
+  
+  function coinFlips(flips) {
+  
+    const results = [];
+    const num = flips;
+  
+    while(flips > 0) {
+      results[num - flips] = coinFlip();
+      flips--;
+    }
+    return results;
+  }
+  
+  /** Count multiple flips
+   * 
+   * Write a function that accepts an array consisting of "heads" or "tails" 
+   * (e.g. the results of your `coinFlips()` function) and counts each, returning 
+   * an object containing the number of each.
+   * 
+   * example: conutFlips(['heads', 'heads','heads', 'tails','heads', 'tails','tails', 'heads','tails', 'heads'])
+   * { tails: 5, heads: 5 }
+   * 
+   * @param {string[]} array 
+   * @returns {{ heads: number, tails: number }}
+   */
+  
+  function countFlips(array) {
+  
+    let noheads = 0;
+    let notails = 0;
+  
+    array.forEach(element => {
+      if(element == "heads") {
+        noheads++;
+      }
+      else {
+        notails++;
+      }
     });
-    return counter;
-}
-// Call a coin flip
-function flipACoin(call) {
-    let flip = coinFlip();
-    let result;
-    if ( flip == call ) {
-        result = 'win'
-    } else {
-        result = 'lose'
+  
+    /*for(var i = 0; i < length; i++) {
+      if (array[i] == "heads") {
+        noheads++;
+      }
+      else {
+        notails++;
+      }
+    }*/
+  
+    return { heads: noheads, tails: notails }
+  }
+  
+  /** Flip a coin!
+   * 
+   * Write a function that accepts one input parameter: a string either "heads" or "tails", flips a coin, and then records "win" or "lose". 
+   * 
+   * @param {string} call 
+   * @returns {object} with keys that are the input param (heads or tails), a flip (heads or tails), and the result (win or lose). See below example.
+   * 
+   * example: flipACoin('tails')
+   * returns: { call: 'tails', flip: 'heads', result: 'lose' }
+   */
+  
+  function flipACoin(call) {
+  
+    var resultingflip = coinFlip();
+    var results;
+  
+    if(call == resultingflip) {
+      results = "win";
     }
-    let game = {
-        call: call,
-        flip: flip,
-        result: result
+    else {
+      results = "lose";
     }
-    return game
-}
+    return {call: call, flip: resultingflip, result: results};
+  }
+  
+  
+  /** Export 
+   * 
+   * Export all of your named functions
+  */
+  
 
 // Serve static HTML public directory
 app.use(express.static('./public'))
@@ -123,34 +212,24 @@ app.get("/app/", (req, res, next) => {
 	res.status(200);
 });
 
-// Endpoint /app/flip/ that returns JSON {"flip":"heads"} or {"flip":"tails"} 
-// corresponding to the results of the random coin flip.
 app.get('/app/flip/', (req, res) => {
-    const flip = coinFlip()
-    res.status(200).json({ "flip" : flip })
+  const flip = coinFlip();
+  res.status(200).json({"flip": flip});
 });
 
-app.post('/app/flip/coins/', (req, res, next) => {
-    const flips = coinFlips(req.body.number)
-    const count = countFlips(flips)
-    res.status(200).json({"raw":flips,"summary":count})
-})
-
-app.get('/app/flips/:number', (req, res, next) => {
-    const flips = coinFlips(req.params.number)
-    const count = countFlips(flips)
-    res.status(200).json({"raw":flips,"summary":count})
+app.get('/app/flips/:number', (req, res) => {
+  const flips = coinFlips(req.params.number);
+  res.status(200).json({"raw": flips, "summary": countFlips(flips)})
+  //Some
+  //expressions
+  //go
+  //here
 });
 
-app.post('/app/flip/call/', (req, res, next) => {
-    const game = flipACoin(req.body.guess)
-    res.status(200).json(game)
-})
-
-app.get('/app/flip/call/:guess(heads|tails)/', (req, res, next) => {
-    const game = flipACoin(req.params.guess)
-    res.status(200).json(game)
-})
+app.get('/app/flip/call/:string', (req, res) => {
+  const call = flipACoin(req.params.string);
+  res.status(200).json(call);
+});
 
 if (args.debug || args.d) {
     app.get('/app/log/access/', (req, res, next) => {
@@ -163,20 +242,8 @@ if (args.debug || args.d) {
     })
 }
 
-// Default API endpoint that returns 404 Not found for any endpoints that are not defined.
-app.use(function(req, res){
-    const statusCode = 404
-    const statusMessage = 'NOT FOUND'
-    res.status(statusCode).end(statusCode+ ' ' +statusMessage)
-});
 
 // Start server
 const server = app.listen(port, () => {
     console.log("Server running on port %PORT%".replace("%PORT%",port))
-});
-// Tell STDOUT that the server is stopped
-process.on('SIGINT', () => {
-    server.close(() => {
-		console.log('\nApp stopped.');
-	});
 });
